@@ -20,9 +20,9 @@ const ItemCtrl = (function () {
    // Data structure / State
    const data = {
       items: [
-         { id: 0, name: 'Steak Dinner', calories: 200 },
-         { id: 1, name: 'Cookie', calories: 300 },
-         { id: 2, name: 'Apples', calories: 100 }
+         // { id: 0, name: 'Steak Dinner', calories: 200 },
+         // { id: 1, name: 'Cookie', calories: 300 },
+         // { id: 2, name: 'Apples', calories: 100 }
       ],
       currentItem: null,
       totalCalories: 0
@@ -47,14 +47,21 @@ const ItemCtrl = (function () {
          calories = parseInt(calories);
 
          newItem = new Item(ID, name, calories);
-         //newItem = { id, name, calories }
-         // console.log(newItem);
-
          data.items.push(newItem);
          console.log(data.items);
          return newItem;
       },
+      getTotalCalories: function () {
+         let total = 0;
 
+         data.items.forEach(function (just_an_argument_should_be_item) {
+            total += just_an_argument_should_be_item.calories;
+         });
+
+         data.totalCalories = total;
+
+         return data.totalCalories;
+      },
       logData: function () {
          return data;
       }
@@ -68,7 +75,8 @@ const UICtrl = (function (param) {
       itemList: '#item-list',
       addBtn: '.add-btn',
       itemNameInput: '#item-name',
-      itemCaloriesInput: '#item-calories'
+      itemCaloriesInput: '#item-calories',
+      totalCalories: '.total-calories'
    }
 
    // Public methods
@@ -87,18 +95,15 @@ const UICtrl = (function (param) {
 
          });
       },
-
       addListItem: function (item) {
+         // show the list
+         document.querySelector(UISelectors.itemList).style.display = 'block';
          // create li element
          const li = document.createElement('li');
-         // add class
+         // add class, id, html and insert item
          li.className = 'collection-item';
-         // add id
          li.id = `item-${item.id}`;
-
-         // add html
          li.innerHTML = `<strong>${item.name}: </strong><em>${item.calories}</em><a href="#" class="secondary-content"><i class="tiny material-icons edit">edit</i></a>`;
-         // insert item
          document.querySelector(UISelectors.itemList).insertAdjacentElement('beforeend', li);
       },
       clearInput: function () {
@@ -111,7 +116,12 @@ const UICtrl = (function (param) {
             calories: document.querySelector(UISelectors.itemCaloriesInput).value
          }
       },
-
+      hideList: function () {
+         document.querySelector(UISelectors.itemList).style.display = 'none';
+      },
+      showTotalCalores: function (totalCalories) {
+         document.querySelector(UISelectors.totalCalories).textContent = totalCalories;
+      },
       getSelectors: function () {
          return UISelectors;
       }
@@ -142,6 +152,11 @@ const App = (function (ItemCtrl, UICtrl, StorageCtrl) {
             const newItem = ItemCtrl.addItem(input.name, input.calories);
             // add item to UI
             UICtrl.addListItem(newItem);
+            // get total calories
+            const totalCalories = ItemCtrl.getTotalCalories();
+            // add total calories to the UI
+            UICtrl.showTotalCalores(totalCalories);
+
             // clear fields
             UICtrl.clearInput();
 
@@ -154,15 +169,24 @@ const App = (function (ItemCtrl, UICtrl, StorageCtrl) {
    return {
       init: function () {
          console.log('Initializing App...');
-
          // Fetch items from data structure
          const items = ItemCtrl.getItems();
 
+         // check if any items
+         if (items.length === 0) {
+            UICtrl.hideList();
+         } else {
+            // populate list of items
+            UICtrl.populateItemList(items);
+         }
+
+         // get total calories
+         const totalCalories = ItemCtrl.getTotalCalories();
+         // add total calories to the UI
+         UICtrl.showTotalCalores(totalCalories);
+
          // load event listeners
          loadEventListeners();
-
-         // populate list of items
-         UICtrl.populateItemList(items);
       }
    }
 })(ItemCtrl, UICtrl, StorageCtrl);
